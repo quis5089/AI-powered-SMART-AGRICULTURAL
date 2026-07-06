@@ -15,6 +15,7 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
   const [credentials, setCredentials] = useState({ username: '', password: '', phone: '', name: '', otp: '' });
   const [notification, setNotification] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [socialLoading, setSocialLoading] = useState<'google' | 'facebook' | null>(null);
 
   const handleRoleSelect = (role: 'Farmer' | 'Buyer' | 'Admin' | 'Expert') => {
     setSelectedRole(role);
@@ -60,8 +61,12 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
     onSuccess(selectedRole);
   };
 
-  const mockSocialLogins = () => {
-    onSuccess(selectedRole);
+  const mockSocialLogins = (platform: 'google' | 'facebook') => {
+    setSocialLoading(platform);
+    setTimeout(() => {
+      setSocialLoading(null);
+      onSuccess(selectedRole);
+    }, 2200);
   };
 
   return (
@@ -245,14 +250,14 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
               <div className="grid grid-cols-2 gap-3">
                 <button
                   type="button"
-                  onClick={mockSocialLogins}
+                  onClick={() => mockSocialLogins('google')}
                   className="border border-slate-200 hover:bg-slate-50 rounded-xl py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 focus:outline-none"
                 >
                   <span className="font-bold text-red-500 font-serif">G</span> Google
                 </button>
                 <button
                   type="button"
-                  onClick={mockSocialLogins}
+                  onClick={() => mockSocialLogins('facebook')}
                   className="border border-slate-200 hover:bg-slate-50 rounded-xl py-2 flex items-center justify-center gap-1.5 text-xs font-semibold text-slate-600 focus:outline-none"
                 >
                   <span className="font-black text-blue-600">f</span> Facebook
