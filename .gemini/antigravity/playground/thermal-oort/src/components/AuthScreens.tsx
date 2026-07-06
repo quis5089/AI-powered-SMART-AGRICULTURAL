@@ -142,7 +142,7 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
             </div>
 
             {/* Selector Method */}
-            <div className="flex bg-slate-105 border border-slate-200 p-1 rounded-xl">
+            <div className="flex bg-slate-100 border border-slate-200 p-1 rounded-xl">
               <button
                 type="button"
                 onClick={() => setAuthMethod('email')}
@@ -347,6 +347,10 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
               <KeySquare className="w-8 h-8 text-brand animate-bounce" />
               <h3 className="font-extrabold text-sm text-slate-800">Verify Code</h3>
               <p className="text-[11px] text-slate-500 text-center">We sent a 4-digit code. Check your device messages.</p>
+            <div className="mt-2.5 text-center p-2 bg-emerald-50 border border-emerald-100 rounded-2xl w-full max-w-[200px] mx-auto">
+              <span className="block text-[9px] text-emerald-800 font-bold uppercase tracking-wider text-emerald-600">Demo Sandbox OTP</span>
+              <span className="block text-base font-black text-emerald-700 tracking-widest mt-0.5 animate-pulse">1234</span>
+            </div>
             </div>
 
             <div className="flex justify-center gap-3 py-1">
@@ -356,7 +360,7 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
                 value={credentials.otp}
                 onChange={(e) => setCredentials(prev => ({ ...prev, otp: e.target.value }))}
                 placeholder="4-digit code"
-                className="w-32 bg-slate-55 border border-slate-200 text-center text-sm font-extrabold focus:outline-none focus:border-brand-accent rounded-xl py-2.5 tracking-widest"
+                className="w-32 bg-slate-50 border border-slate-200 text-center text-sm font-extrabold focus:outline-none focus:border-brand-accent rounded-xl py-2.5 tracking-widest"
               />
             </div>
 
