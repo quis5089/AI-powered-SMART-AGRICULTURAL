@@ -1,3 +1,5 @@
+const Otp = require("../models/Otp");
+const smsService = require("./smsService");
 /**
  * services/authService.js
  * Business logic layer for authentication operations.
@@ -76,6 +78,54 @@ const resetPassword = async (resetToken, newPassword) => {
   return { user: sanitizeUser(user), token };
 };
 
+
+const sendOtp = async (phone) => {
+  // Generate random 4-digit OTP
+  const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+  
+  // Save or update existing OTP for this phone
+  await Otp.findOneAndUpdate(
+    { phone },
+    { otp: otpCode, createdAt: new Date() },
+    { upsert: true, new: true }
+  );
+
+  // Send SMS
+  const messageBody = `[AgriEcosystem] Your login verification code is ${otpCode}. Valid for 5 minutes.`;
+  await smsService.sendSMS(phone, messageBody);
+  
+  return { phone, codeSent: true };
+};
+
+const verifyOtp = async (phone, otpCode) => {
+  // Check if OTP matches
+  const match = await Otp.findOne({ phone, otp: otpCode });
+  if (!match) {
+    const err = new Error("Invalid or expired verification code.");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  // Delete OTP once matched successfully
+  await Otp.deleteOne({ _id: match._id });
+
+  // Find user by phone, or create a mock user for sandbox demo if they don't exist
+  let user = await User.findOne({ phone });
+  if (!user) {
+    // Sandbox auto-registration for demo
+    user = await User.create({
+      fullName: "Agri Stakeholder (" + phone.substring(phone.length - 4) + ")",
+      email: "phone_" + phone + "@agri.com",
+      phone,
+      password: Math.random().toString(36), // Random password
+      role: "farmer",
+    });
+  }
+
+  const token = generateToken(user._id, user.role);
+  return { user: sanitizeUser(user), token };
+};
+
 const sanitizeUser = (user) => ({
   _id: user._id, fullName: user.fullName, email: user.email, phone: user.phone,
   role: user.role, profilePhoto: user.profilePhoto, state: user.state,
@@ -83,4 +133,4 @@ const sanitizeUser = (user) => ({
   isActive: user.isActive, createdAt: user.createdAt, updatedAt: user.updatedAt,
 });
 
-module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword };
+module.exports = { registerUser, loginUser, getUserProfile, updateUserProfile, forgotPassword, resetPassword, sendOtp, verifyOtp };

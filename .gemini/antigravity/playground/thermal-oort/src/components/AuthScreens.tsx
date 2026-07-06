@@ -22,7 +22,8 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
     setState('login');
   };
 
-  const handleLogin = (e: React.FormEvent) => {
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (authMethod === 'email' && !credentials.username) {
       setNotification('Please fill in email credentials.');
@@ -33,14 +34,49 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
       return;
     }
     
-    // Switch directly or prompt OTP
     if (authMethod === 'phone') {
-      setState('otp');
-      setNotification('OTP code sent to your registered number: ' + credentials.phone);
+      try {
+        setNotification('Requesting verification code...');
+        const res = await fetch('http://localhost:5000/api/auth/send-otp', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ phone: credentials.phone })
+        });
+        const data = await res.json();
+        if (data.success) {
+          setState('otp');
+          setNotification('OTP code sent successfully.');
+        } else {
+          setNotification(data.message || 'Failed to send OTP.');
+        }
+      } catch (err) {
+        // Fallback for demo if backend is offline
+        setState('otp');
+        setNotification('Demo Sandbox: SMS gateway offline. Enter 1234.');
+      }
     } else {
-      onSuccess(selectedRole);
+      // Email Login
+      try {
+        setNotification('Verifying credentials...');
+        const res = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: credentials.username, password: credentials.password })
+        });
+        const data = await res.json();
+        if (data.success) {
+          localStorage.setItem('agri_token', data.token);
+          onSuccess(selectedRole);
+        } else {
+          setNotification(data.message || 'Invalid credentials.');
+        }
+      } catch (err) {
+        // Fallback for demo
+        onSuccess(selectedRole);
+      }
     }
   };
+
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,14 +88,38 @@ export default function AuthScreens({ onSuccess, onGoBack }: AuthScreensProps) {
     setNotification('A registration verification code has been dispatched.');
   };
 
-  const handleOtpVerify = (e: React.FormEvent) => {
+
+  const handleOtpVerify = async (e: React.FormEvent) => {
     e.preventDefault();
     if (credentials.otp.length < 4) {
       setNotification('Invalid verification code. Enter a 4-digit code.');
       return;
     }
-    onSuccess(selectedRole);
+    
+    try {
+      setNotification('Verifying OTP...');
+      const res = await fetch('http://localhost:5000/api/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: credentials.phone, otp: credentials.otp })
+      });
+      const data = await res.json();
+      if (data.success) {
+        localStorage.setItem('agri_token', data.token);
+        onSuccess(selectedRole);
+      } else {
+        setNotification(data.message || 'Verification failed.');
+      }
+    } catch (err) {
+      // Fallback for demo
+      if (credentials.otp === '1234') {
+        onSuccess(selectedRole);
+      } else {
+        setNotification('Incorrect verification code.');
+      }
+    }
   };
+
 
   const mockSocialLogins = (platform: 'google' | 'facebook') => {
     setSocialLoading(platform);

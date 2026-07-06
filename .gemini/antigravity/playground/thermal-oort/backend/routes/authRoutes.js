@@ -25,6 +25,7 @@ const {
   register, login, logout,
   getProfile, updateProfile,
   forgotPassword, resetPassword,
+  sendOtpCode, verifyOtpCode,
 } = require("../controllers/authController");
 
 const protect = require("../middleware/authMiddleware");
@@ -39,6 +40,8 @@ const {
 router.post("/register",        registerRules,        validate, register);
 router.post("/login",           loginRules,           validate, login);
 router.post("/logout",          logout);
+router.post("/send-otp",        sendOtpCode);
+router.post("/verify-otp",      verifyOtpCode);
 router.post("/forgot-password", forgotPasswordRules,  validate, forgotPassword);
 router.post("/reset-password/:resetToken", resetPasswordRules, validate, resetPassword);
 

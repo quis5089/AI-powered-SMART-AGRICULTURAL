@@ -1,6 +1,6 @@
 /**
  * controllers/authController.js
- * Thin controller layer — delegates all logic to authService.
+ * Thin controller layer ï¿½ delegates all logic to authService.
  * Handles HTTP req/res, calls service, sends standardized responses.
  * Future: Add rate-limit-per-user, audit logs, activity tracking here.
  */
@@ -50,6 +50,32 @@ const updateProfile = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
+
+// POST /api/auth/send-otp
+const sendOtpCode = async (req, res, next) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return sendError(res, 400, "Phone number is required.");
+    }
+    const result = await authService.sendOtp(phone);
+    return sendSuccess(res, 200, "OTP verification code sent successfully.", result);
+  } catch (err) { next(err); }
+};
+
+// POST /api/auth/verify-otp
+const verifyOtpCode = async (req, res, next) => {
+  try {
+    const { phone, otp } = req.body;
+    if (!phone || !otp) {
+      return sendError(res, 400, "Phone number and OTP code are required.");
+    }
+    const { user, token } = await authService.verifyOtp(phone, otp);
+    sendTokenCookie(res, token);
+    return sendSuccess(res, 200, "OTP verified successfully. Logged in.", user, token);
+  } catch (err) { next(err); }
+};
+
 // POST /api/auth/forgot-password
 const forgotPassword = async (req, res, next) => {
   try {
@@ -67,4 +93,4 @@ const resetPassword = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-module.exports = { register, login, logout, getProfile, updateProfile, forgotPassword, resetPassword };
+module.exports = { register, login, logout, getProfile, updateProfile, forgotPassword, resetPassword, sendOtpCode, verifyOtpCode };
